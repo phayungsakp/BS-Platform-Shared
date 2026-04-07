@@ -106,3 +106,18 @@ When the user provides UI mockups, screenshots, or PDF references (e.g., from Co
    - If the image shows a timeline, map it strictly to `BSGanttChart`.
 3. **Color & Typography Accuracy:** Extract primary colors, background colors, and typography styles from the image and apply them using MUI `sx` props or theme variables.
 4. **No Hallucination of Layouts:** Do not invent new screen layouts if a reference image is provided. Follow the image strictly unless explicitly told otherwise.
+
+---
+
+## 7. Data & Image Reference Sources (External & Attached)
+
+**Visual Screenshot Repository:**
+
+- **Base URL:** `https://github.com/phayungsakp/BS-Platform-Shared/tree/main/docs/ScreenShot`
+- **Instruction:** When the user mentions a specific screen name (e.g., "Screen Login", "Config Page"), the AI should acknowledge that the definitive UI/UX structure is stored in the repository above.
+- **Vision Requirement:** Although the AI refers to the GitHub path, it MUST prioritize analyzing any **uploaded PDF/Image files** provided in the current session (such as `Authentication.pdf`, `Config.pdf`, `Project.pdf`) to ensure 100% accuracy in component placement and styling.
+
+**How to use with AI Vision:**
+
+1. **Context First:** Always refer to the uploaded PDF documents as the "Visual Source of Truth".
+2. **URL Reference:** If the user provides a direct image link from the GitHub ScreenShot folder, the AI should use its vision capabilities to fetch (if supported by the specific AI tool) or ask the user to provide a snippet for precise coding.

@@ -1,0 +1,216 @@
+# ?? Quick Start Guide - Bulk Import
+
+## ???????????????? 5 ????!
+
+### ?????????? 1: Setup Database (2 ????)
+
+```sql
+-- 1. ????? table ?????? column mapping
+CREATE TABLE [imp].[t_mas_import_column_mapping]
+(
+    [mapping_id] INT IDENTITY(1,1) PRIMARY KEY,
+    [import_id] INT NOT NULL,
+    [excel_column_name] NVARCHAR(100) NOT NULL,
+    [db_column_name] NVARCHAR(100) NOT NULL,
+    [data_type] NVARCHAR(50) NOT NULL DEFAULT 'NVARCHAR',
+    [column_order] INT NOT NULL,
+    [is_required] BIT NOT NULL DEFAULT 0,
+    [default_value] NVARCHAR(200) NULL,
+    [validation_rule] NVARCHAR(500) NULL,
+    [is_active] BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_ImportColumnMapping_ImportMaster 
+        FOREIGN KEY ([import_id]) REFERENCES [imp].[t_mas_import_master]([import_id])
+);
+```
+
+### ?????????? 2: ????? Stored Procedure (2 ????)
+
+```sql
+-- ?????? YOUR_TARGET_TABLE ??? YOUR_COLUMNS ??? business logic ??????
+CREATE OR ALTER PROCEDURE [imp].[usp_bulk_import_data]
+    @in_vchUserId NVARCHAR(40),
+    @in_vchTempTableName NVARCHAR(200),
+    @out_vchErrorCode NVARCHAR(50) OUTPUT,
+    @out_vchErrorMessage NVARCHAR(500) OUTPUT,
+    @out_vchErrorRecord NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        CREATE TABLE #TempImportResult
+        (
+            ErrorCode NVARCHAR(50),
+            ErrorMessage NVARCHAR(500),
+            ErrorRecord NVARCHAR(100)
+        );
+
+        DECLARE @sql NVARCHAR(MAX);
+        DECLARE @errorCount INT = 0;
+
+        -- TODO: Add your validation logic here
+        
+        -- MERGE ???? INSERT ????????? temp table ????? target table
+        SET @sql = N'
+        MERGE INTO [YOUR_SCHEMA].[YOUR_TARGET_TABLE] AS Target
+        USING ' + QUOTENAME(@in_vchTempTableName) + ' AS Source
+        ON Target.YourKeyColumn = Source.YourKeyColumn
+        WHEN MATCHED THEN UPDATE SET Target.Column1 = Source.Column1
+        WHEN NOT MATCHED THEN INSERT (Column1) VALUES (Source.Column1);
+        ';
+        EXEC sp_executesql @sql, N'@UserId NVARCHAR(40)', @UserId = @in_vchUserId;
+
+        SELECT @errorCount = COUNT(*) FROM #TempImportResult;
+        
+        IF @errorCount > 0
+        BEGIN
+            SET @out_vchErrorCode = '1';
+            SET @out_vchErrorMessage = 'Import completed with errors';
+        END
+        ELSE
+        BEGIN
+            SET @out_vchErrorCode = '0';
+            SET @out_vchErrorMessage = 'Import completed successfully';
+        END
+
+        SET @out_vchErrorRecord = CAST(@errorCount AS NVARCHAR(100));
+        SELECT ErrorCode, ErrorMessage, ErrorRecord FROM #TempImportResult;
+    END TRY
+    BEGIN CATCH
+        SET @out_vchErrorCode = '1';
+        SET @out_vchErrorMessage = ERROR_MESSAGE();
+        SET @out_vchErrorRecord = '0';
+        SELECT '1' AS ErrorCode, ERROR_MESSAGE() AS ErrorMessage, '0' AS ErrorRecord;
+    END CATCH
+END
+GO
+```
+
+### ?????????? 3: ????? Configuration (1 ????)
+
+```sql
+-- ????? import_id = 1 (???????? import_id ??????)
+DECLARE @ImportId INT = 1;
+
+-- ?????? stored procedure ?? import master
+UPDATE [imp].[t_mas_import_master]
+SET exec_sql_command = 'imp.usp_bulk_import_data'
+WHERE import_id = @ImportId;
+
+-- ????? column mapping (???????? columns ??????)
+INSERT INTO [imp].[t_mas_import_column_mapping] 
+    (import_id, excel_column_name, db_column_name, data_type, column_order, is_required, is_active)
+VALUES
+    (@ImportId, 'Column A', 'ColumnA', 'NVARCHAR', 1, 1, 1),
+    (@ImportId, 'Column B', 'ColumnB', 'INT', 2, 1, 1),
+    (@ImportId, 'Column C', 'ColumnC', 'DECIMAL', 3, 0, 1);
+```
+
+---
+
+## ?? ???????????!
+
+### ??? Postman/Swagger
+
+**Endpoint:** `POST /api/Import/UploadExcelBulk`
+
+**Headers:**
+```
+Authorization: Bearer {your_jwt_token}
+```
+
+**Body (form-data):**
+```
+user_id: YOUR_USER_ID
+import_id: 1
+batch_size: 5000
+files: [Excel file]
+```
+
+**Excel Format:**
+| Column A | Column B | Column C |
+|----------|----------|----------|
+| Value 1  | 100      | 50.5     |
+| Value 2  | 200      | 75.25    |
+
+?? **?????**: Header row ?? Excel ?????????? `excel_column_name` ???????????!
+
+---
+
+## ?? Response ????????
+
+### ? Success
+```json
+{
+    "code": "0",
+    "message": "Import completed successfully. Processed: 100 rows out of 100 total rows",
+    "data": [],
+    "total": 0
+}
+```
+
+### ? With Errors
+```json
+{
+    "code": "1",
+    "message": "Import validation failed with 2 error(s). Total rows: 100",
+    "data": [
+        {
+            "code": "REQ001",
+            "message": "Required field is missing: Column A",
+            "records": "Row 5"
+        }
+    ],
+    "total": 2
+}
+```
+
+---
+
+## ?? ??????????????
+
+```sql
+-- ??????????? import
+SELECT * FROM [YOUR_SCHEMA].[YOUR_TARGET_TABLE]
+ORDER BY create_date DESC;
+
+-- ????????
+SELECT COUNT(*) FROM [YOUR_SCHEMA].[YOUR_TARGET_TABLE]
+WHERE create_by = 'YOUR_USER_ID'
+AND create_date >= CAST(GETDATE() AS DATE);
+```
+
+---
+
+## ?? Troubleshooting
+
+### ?????: "Column mapping configuration not found"
+**???:** ??? SQL ???????????? 3 ????
+
+### ?????: Excel header ??????
+**???:** ?????????? header ?? Excel ?????? `excel_column_name` ?????? (??????????????)
+
+### ?????: Stored procedure error
+**???:** ??????? MERGE statement ????????? table structure ??????
+
+---
+
+## ?? ???????????????
+
+- **?????????????**: `BULK_IMPORT_GUIDE.md`
+- **????????**: `TESTING_GUIDE.md`
+- **???????????**: `SUMMARY.md`
+
+---
+
+## ?? Tips
+
+1. ???????????????????? (10-100 rows) ??????????????
+2. ??????? column mapping ??????????
+3. ????? validation logic ?? stored procedure
+4. Monitor performance ??????? batch_size ??????????????
+
+---
+
+**?? ???????????????????? Bulk Import ????!**
+
+???????? ???????????????????????????????????

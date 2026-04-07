@@ -109,15 +109,14 @@ When the user provides UI mockups, screenshots, or PDF references (e.g., from Co
 
 ---
 
-## 7. Data & Image Reference Sources (External & Attached)
+## 7. Visual Reference Sources (Attached Files Only)
 
-**Visual Screenshot Repository:**
+**Visual Source of Truth:**
 
-- **Base URL:** `https://github.com/phayungsakp/BS-Platform-Shared/tree/main/docs/ScreenShot`
-- **Instruction:** When the user mentions a specific screen name (e.g., "Screen Login", "Config Page"), the AI should acknowledge that the definitive UI/UX structure is stored in the repository above.
-- **Vision Requirement:** Although the AI refers to the GitHub path, it MUST prioritize analyzing any **uploaded PDF/Image files** provided in the current session (such as `Authentication.pdf`, `Config.pdf`, `Project.pdf`) to ensure 100% accuracy in component placement and styling.
+- **Instruction:** When the user requests UI design or code generation for a specific screen (e.g., "Screen Login", "Config Page", "Master Data"), the AI MUST rely entirely on the **uploaded PDF or Image files** provided in the current chat session.
+- **Vision Requirement:** The AI must use its vision capabilities to thoroughly analyze the attached files to ensure 100% accuracy in component placement, grid layout, styling, and typography.
 
 **How to use with AI Vision:**
 
-1. **Context First:** Always refer to the uploaded PDF documents as the "Visual Source of Truth".
-2. **URL Reference:** If the user provides a direct image link from the GitHub ScreenShot folder, the AI should use its vision capabilities to fetch (if supported by the specific AI tool) or ask the user to provide a snippet for precise coding.
+1. **Prioritize Uploads:** Always treat the explicitly uploaded documents (such as `Authentication.pdf`, `Config.pdf`, `MasterData.pdf`, or `Project.pdf`) as the definitive "Visual Source of Truth".
+2. **Do Not Hallucinate:** If the user asks to build a specific screen but has not attached a corresponding image or PDF, the AI should politely ask the user to upload the visual reference first before proceeding with the code generation, ensuring the output perfectly matches the BS Platform standards.

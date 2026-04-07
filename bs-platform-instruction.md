@@ -69,7 +69,12 @@ When asked to design a screen, default to one of these BS Platform layout archet
 > **Reference:** `docs/ScreenShot/Config/Resource1.png`, `docs/ScreenShot/Authentication/User1.png`, `docs/ScreenShot/Master/Sale1.png`
 
 - **Global Layout:** Left collapsible sidebar (210px) with navigation menu + Favorite section with star icons at top.
-- **Header Bar (Top):** App Logo "Timesheet" + collapse toggle | **Breadcrumb** in purple/indigo header bar (e.g., "Configs / Resource") | Right side: Language flag toggle, Dark mode toggle (sun/moon icon), Color palette toggle, Notification bell, User avatar.
+- **Header Bar (Top):** App Logo "Timesheet" + collapse toggle (`ChevronLeft` icon) | **Breadcrumb** in purple/indigo gradient header bar (e.g., "Configs / Resource", white text) | Right side icons (all use **MUI outlined icons, white color**):
+  1. **Language toggle:** Country **flag icon** (🇬🇧/🇹🇭) — NOT text like "TH" or "EN"
+  2. **Dark mode toggle:** `Brightness4Outlined` (sun/moon icon)
+  3. **Color palette:** `PaletteOutlined` icon
+  4. **Notifications:** `NotificationsOutlined` bell icon
+  5. **User avatar:** Circular `Avatar` with user initials (e.g., "SS", "AD")
 - **Toolbar Row:** Left side: `+ Add Record` button (outlined, with optional dropdown arrow) | Right side: Search input field + `Show Filters` link + `Refresh` button + Column visibility icon (|||) + Filter icon + Density icon (≡) + Export/Download icon (↓).
 - **Main Content:** `EditableDataGrid` with these exact column patterns:
   - **Column 1-2:** Action icons — Edit (pencil ✏️) and Delete (trash 🗑️) per row.
@@ -219,34 +224,60 @@ These specifications are derived from actual BS Platform screenshots and MUST be
 
 ### 7.2 Sidebar Navigation Structure
 
+> **⚠️ CRITICAL — Sidebar uses MUI outlined icons in gray `#757575`, NOT colored emojis or colored circles.**
+
+**Icon Mapping (must use exact MUI icons):**
+
+| Menu Group     | MUI Icon                              | Icon Name                    |
+| -------------- | ------------------------------------- | ---------------------------- |
+| Search         | `SearchOutlined`                      | Search box at top            |
+| Favorite       | `StarOutlined` / `StarBorderOutlined` | Pinned items use filled star |
+| Home           | `HomeOutlined`                        | Home menu                    |
+| Authentication | `PeopleOutlined`                      | User/group management        |
+| Configs        | `SettingsOutlined`                    | Configuration settings       |
+| Master         | `TuneOutlined` / `ListAltOutlined`    | Master data                  |
+| Import         | `FileUploadOutlined`                  | Import data                  |
+| Projects       | `AssignmentOutlined`                  | Project management           |
+| Performance    | `BarChartOutlined`                    | Performance/reports          |
+
+**Sidebar Style Rules:**
+
+- Background: **White `#FFFFFF`**
+- Text: **Gray `#424242`** for items, **Dark `#212121`** for group headers
+- Active item: **Light blue background `#E3F2FD`** with **indigo text `#3F51B5`**
+- Group expand/collapse: Use **chevron arrow `ExpandMore`/`ChevronRight`**, NOT colored dots
+- "Favorite" label: **Mixed case** (not "FAVORITE" uppercase)
+- Sub-items: Show **star icon** (`StarOutlined`) for favorited items, `StarBorderOutlined` for non-favorited
+- Collapse toggle button: **`ChevronLeft`** icon at top-right of sidebar (ref: `docs/ScreenShot/Authentication/User1.png`)
+
 ```
-🔍 Search box
-⭐ Favorite (collapsible, with star-pinned items)
-🏠 Home
-👥 Authentication ▾
+[SearchOutlined] Search box
+[StarOutlined] Favorite (collapsible, with star-pinned items)
+[HomeOutlined] Home
+[PeopleOutlined] Authentication ▾
    ├── User Group
    ├── User
    ├── User Logon
    ├── Menu
    └── Assign Menu
-⚙️ Configs ▾
+[SettingsOutlined] Configs ▾
    ├── Resource
    ├── Combobox
    └── Banner
-↕️ Master ▾
+[TuneOutlined] Master ▾
    ├── Holiday
    ├── Sale
    ├── Customer
    └── ISO
-📥 Import ▾
+[FileUploadOutlined] Import ▾
    ├── Import Master
    └── Import Excel
-📋 Projects ▾
+[AssignmentOutlined] Projects ▾
    ├── Project
    ├── MA
    ├── My Task
    └── Man Power
-📊 Performance ▾
+[BarChartOutlined] Performance ▾
    ├── Performance
    └── Incentive
 ```
@@ -266,19 +297,32 @@ These specifications are derived from actual BS Platform screenshots and MUST be
 
 Every CRUD grid row MUST start with:
 
-1. **Edit icon** (pencil ✏️) — opens edit modal or enters inline edit mode
-2. **Delete icon** (trash 🗑️) — opens SweetAlert2 delete confirmation
+1. **Edit icon** — MUI `EditOutlined` icon (pencil shape), **gray color `#757575`**, NO background circle, NO fill color. Simply a small outlined pencil icon.
+2. **Delete icon** — MUI `DeleteOutlined` icon (trash can shape), **gray color `#757575`**, NO background square, NO fill color. Simply a small outlined trash icon.
+
+> **⚠️ CRITICAL — DO NOT:**
+>
+> - Use colored circles or squares behind the icons
+> - Use `RemoveCircle`, `RemoveCircleOutline`, or minus (—) icons for edit
+> - Use filled/colored trash icons (no red/orange background)
+> - Use emoji-style icons
+>   The action icons must be **plain gray outlined MUI icons only**, matching `docs/ScreenShot/Master/Sale1.png`.
 
 Then `#` row number column, followed by data columns.
 
 ### 7.5 Form Modal Standards
 
+> **⚠️ CRITICAL — Must match `docs/ScreenShot/Master/SaleAdd2.png` and `docs/ScreenShot/Authentication/UserAdd2.png` exactly.**
+
+- **Modal Title:** Plain **black text** (e.g., "Add New Record", "Add User"). **NEVER use colored/orange/amber title text.**
+- **Close button:** **NO ✕ (X) close button** on the modal. Users close via "Cancel" button only.
 - **Layout:** 2-column grid (simple entities) or 4-column grid (complex like Project Edit)
-- **Required fields:** Marked with asterisk `*` on label
+- **Form Fields Style:** Use **placeholder text inside the input field only**. **DO NOT add separate labels above the input fields.** Each field shows its name as placeholder (e.g., "Sale Employee Code _", "Sale Name _"). Required fields append asterisk `*` to the placeholder text.
 - **Dropdowns:** Always use `BsAutoComplete` with dropdown arrow icon
 - **Password fields:** Include visibility toggle (eye icon)
 - **Read-only fields:** Gray/disabled background
-- **Action buttons:** Right-aligned at bottom — "Cancel" (text/outlined) + "Add"/"Save" (text, primary color)
+- **Status field in Add form:** **Do NOT** include a Status/Active dropdown in the Add New Record form unless explicitly specified. New records default to active.
+- **Action buttons:** Right-aligned at bottom — **"Cancel"** (text, red/default color) + **"Save"** (text, primary blue `#1976D2`). **Button text must say "Save", NOT "Add".**
 
 ---
 
